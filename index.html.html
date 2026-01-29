@@ -1,0 +1,1633 @@
+<!--
+    PROPRIEDADE INTELECTUAL DA TOYOTA TSUSHO CORRETORA DE SEGUROS
+    Este código-fonte é confidencial e de propriedade exclusiva.
+    A cópia, reprodução ou distribuição não autorizada é proibida.
+    © 2026 Toyota Tsusho Corretora de Seguros.
+-->
+<!DOCTYPE html>
+<html lang="pt-br">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Coleta de Informações - Score Lavouras</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+    <style>
+        :root {
+            --primary-color: #2e7d32;
+            --secondary-color: #4caf50;
+            --accent-color: #ff9800;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background-color: #f5f9f5;
+            color: #333;
+            padding-bottom: 50px;
+        }
+
+        .step-container {
+            background-color: white;
+            border-radius: 15px;
+            box-shadow: 0 5px 15px rgba(0, 0, 0, 0.08);
+            padding: 30px;
+            margin-top: 20px;
+            margin-bottom: 20px;
+            min-height: 500px;
+        }
+
+        .step-header {
+            border-bottom: 2px solid var(--primary-color);
+            padding-bottom: 15px;
+            margin-bottom: 30px;
+            color: var(--primary-color);
+        }
+
+        .step-indicator {
+            display: flex;
+            justify-content: space-between;
+            margin-bottom: 30px;
+            position: relative;
+        }
+
+        .step-indicator::before {
+            content: '';
+            position: absolute;
+            top: 20px;
+            left: 10%;
+            right: 10%;
+            height: 2px;
+            background-color: #e0e0e0;
+            z-index: 1;
+        }
+
+        .step {
+            width: 40px;
+            height: 40px;
+            border-radius: 50%;
+            background-color: #e0e0e0;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-weight: bold;
+            color: #777;
+            z-index: 2;
+            position: relative;
+        }
+
+        .step.active {
+            background-color: var(--primary-color);
+            color: white;
+        }
+
+        .step.completed {
+            background-color: var(--secondary-color);
+            color: white;
+        }
+
+        .step-label {
+            position: absolute;
+            top: 45px;
+            width: 100px;
+            left: -30px;
+            text-align: center;
+            font-size: 12px;
+            color: #666;
+        }
+
+        .btn-custom {
+            background-color: var(--primary-color);
+            color: white;
+            padding: 10px 25px;
+            border-radius: 30px;
+            font-weight: 600;
+            border: none;
+            transition: all 0.3s;
+        }
+
+        .btn-custom:hover {
+            background-color: #1b5e20;
+            color: white;
+            transform: translateY(-2px);
+        }
+
+        .btn-secondary-custom {
+            background-color: #6c757d;
+            color: white;
+            padding: 10px 25px;
+            border-radius: 30px;
+            font-weight: 600;
+            border: none;
+        }
+
+        .form-label {
+            font-weight: 600;
+            color: #444;
+            margin-top: 15px;
+        }
+
+        .observation {
+            background-color: #fff8e1;
+            border-left: 4px solid #ffc107;
+            padding: 15px;
+            margin: 20px 0;
+            border-radius: 0 5px 5px 0;
+        }
+
+        .form-control,
+        .form-select {
+            border-radius: 8px;
+            padding: 10px 15px;
+            border: 1px solid #ddd;
+        }
+
+        .form-control:focus,
+        .form-select:focus {
+            border-color: var(--secondary-color);
+            box-shadow: 0 0 0 0.25rem rgba(76, 175, 80, 0.25);
+        }
+
+        .progress {
+            height: 8px;
+            margin-bottom: 20px;
+        }
+
+        .summary-item {
+            padding: 12px;
+            border-bottom: 1px solid #eee;
+        }
+
+        .summary-item:last-child {
+            border-bottom: none;
+        }
+
+        .summary-label {
+            font-weight: 600;
+            color: #555;
+        }
+
+        .summary-value {
+            color: #333;
+        }
+
+        .tooltip-icon {
+            color: var(--accent-color);
+            cursor: help;
+            margin-left: 5px;
+        }
+
+        .hidden {
+            display: none !important;
+        }
+
+        .navigation-buttons {
+            display: flex;
+            justify-content: space-between;
+            margin-top: 30px;
+            padding-top: 20px;
+            border-top: 1px solid #eee;
+        }
+    </style>
+</head>
+
+<body>
+    <div class="container">
+        <div class="row">
+            <div class="col-12">
+                <!-- Cabeçalho -->
+                <div class="text-center mt-4 mb-3">
+                    <h2 class="text-success"><i class="fas fa-leaf me-2"></i>Score Lavouras - Coleta de Informações</h2>
+                    <p class="text-muted">Preencha todos os passos para gerar o relatório completo</p>
+                </div>
+
+                <!-- Indicador de Progresso -->
+                <div class="progress">
+                    <div id="progressBar" class="progress-bar bg-success" role="progressbar" style="width: 12.5%"
+                        aria-valuenow="12.5" aria-valuemin="0" aria-valuemax="100"></div>
+                </div>
+
+                <!-- Indicador de Passos -->
+                <div class="step-indicator">
+                    <div class="step active" id="indicator-1">
+                        1
+                        <div class="step-label">Dados Básicos</div>
+                    </div>
+                    <div class="step" id="indicator-2">
+                        2
+                        <div class="step-label">Cotação</div>
+                    </div>
+                    <div class="step" id="indicator-3">
+                        3
+                        <div class="step-label">Análise de Solo</div>
+                    </div>
+                    <div class="step" id="indicator-4">
+                        4
+                        <div class="step-label">Matéria Orgânica</div>
+                    </div>
+                    <div class="step" id="indicator-5">
+                        5
+                        <div class="step-label">Classificação</div>
+                    </div>
+                    <div class="step" id="indicator-6">
+                        6
+                        <div class="step-label">Estrutura Física</div>
+                    </div>
+                    <div class="step" id="indicator-7">
+                        7
+                        <div class="step-label">Manejo</div>
+                    </div>
+                    <div class="step" id="indicator-8">
+                        8
+                        <div class="step-label">Resumo</div>
+                    </div>
+                </div>
+
+                <!-- Step 1: Dados Básicos -->
+                <div id="step1" class="step-container">
+                    <div class="step-header">
+                        <h3><i class="fas fa-building me-2"></i>Passo 1: Dados Básicos da Propriedade</h3>
+                    </div>
+
+                    <div class="row">
+                        <div class="col-md-12">
+                            <label for="fazenda" class="form-label">Selecione a Fazenda <span
+                                    class="text-danger">*</span></label>
+                            <select class="form-select" id="fazenda" required>
+                                <option value="">Selecione uma fazenda...</option>
+                                <option value="alvorada">Fazenda Alvorada - Couto de Magalhães/TO</option>
+                                <option value="colorado">Fazenda Colorado - Lagoa da Confusão/TO</option>
+                                <option value="flores">Fazenda Flores - Piraquê/TO</option>
+                                <option value="talisma">Fazenda Talismã - Talismã/TO</option>
+                                <option value="guarabu">Fazenda Guarabu - Araguaína/TO</option>
+                            </select>
+                        </div>
+                    </div>
+
+                    <div class="row">
+                        <div class="col-md-6">
+                            <label for="cnpj" class="form-label">CNPJ <span class="text-danger">*</span></label>
+                            <input type="text" class="form-control" id="cnpj" placeholder="00.000.000/0000-00" readonly
+                                required>
+                        </div>
+                        <div class="col-md-6">
+                            <label for="cidadeEstado" class="form-label">Cidade/Estado <span
+                                    class="text-danger">*</span></label>
+                            <input type="text" class="form-control" id="cidadeEstado" placeholder="Ex: Sorriso/MT"
+                                readonly required>
+                        </div>
+                    </div>
+
+                    <div class="row">
+                        <div class="col-md-6">
+                            <label for="hectares" class="form-label">Área Total (Hectares) <span
+                                    class="text-danger">*</span></label>
+                            <input type="number" class="form-control" id="hectares" placeholder="Ex: 500" required>
+                        </div>
+                    </div>
+
+                    <div class="observation">
+                        <i class="fas fa-info-circle me-2"></i><strong>Observação:</strong> Os campos marcados com * são
+                        obrigatórios para prosseguir.
+                    </div>
+
+                    <div class="form-check mt-3">
+                        <input class="form-check-input" type="checkbox" id="termoUso" required>
+                        <label class="form-check-label" for="termoUso" style="font-size: 0.9rem;">
+                            Compreendo que esta ferramenta é propriedade da Toyota Tsusho Corretora de Seguros e não
+                            deve ser compartilhada com terceiros.
+                        </label>
+                    </div>
+
+                    <div class="navigation-buttons">
+                        <div></div>
+                        <button class="btn btn-custom" onclick="nextStep(1)">
+                            Próximo <i class="fas fa-arrow-right ms-2"></i>
+                        </button>
+                    </div>
+                </div>
+
+                <!-- Step 2: Dados de Cotação -->
+                <div id="step2" class="step-container hidden">
+                    <div class="step-header">
+                        <h3><i class="fas fa-seedling me-2"></i>Passo 2: Dados de Cotação</h3>
+                    </div>
+
+                    <div class="row">
+                        <div class="col-md-6">
+                            <label for="cultivar" class="form-label">Cultivar <span class="text-danger">*</span></label>
+                            <input type="text" class="form-control" id="cultivar" placeholder="Ex: M 6410" required>
+                        </div>
+                        <div class="col-md-6">
+                            <label for="grupoCultivar" class="form-label">Grupo de Maturação <span
+                                    class="text-danger">*</span></label>
+                            <select class="form-select" id="grupoCultivar" required>
+                                <option value="">Selecione...</option>
+                                <option value="Precoce (5.8 a 6.5)">Precoce (5.8 a 6.5)</option>
+                                <option value="Médio (6.6 a 7.3)">Médio (6.6 a 7.3)</option>
+                                <option value="Tardio (7.4 a 8.0)">Tardio (7.4 a 8.0)</option>
+                            </select>
+                        </div>
+                    </div>
+
+                    <div class="row">
+                        <div class="col-md-6">
+                            <label for="dataPlantio" class="form-label">Data de Plantio <span
+                                    class="text-danger">*</span></label>
+                            <input type="date" class="form-control" id="dataPlantio" required>
+                        </div>
+                        <div class="col-md-6">
+                            <label for="tecnicaPlantio" class="form-label">Técnica de Plantio <span
+                                    class="text-danger">*</span></label>
+                            <select class="form-select" id="tecnicaPlantio" required>
+                                <option value="">Selecione...</option>
+                                <option value="Plantio Direto">Plantio Direto</option>
+                                <option value="Plantio Convencional">Plantio Convencional</option>
+                                <option value="Cultivo Mínimo">Cultivo Mínimo</option>
+                            </select>
+                        </div>
+                    </div>
+
+                    <div class="row">
+                        <div class="col-md-4">
+                            <label for="produtividade" class="form-label">Produtividade Esperada (sc/ha) <span
+                                    class="text-danger">*</span></label>
+                            <input type="number" step="0.01" class="form-control" id="produtividade"
+                                placeholder="Ex: 65" required>
+                        </div>
+                        <div class="col-md-4">
+                            <label for="valorSaca" class="form-label">Valor da Saca (R$) <span
+                                    class="text-danger">*</span></label>
+                            <input type="number" step="0.01" class="form-control" id="valorSaca"
+                                placeholder="Ex: 150.00" required>
+                        </div>
+                        <div class="col-md-4">
+                            <label for="psr" class="form-label">Subvenção ao Prêmio do Seguro Rural (PSR) <i
+                                    class="fas fa-question-circle tooltip-icon"
+                                    title="Possui Subvenção ao Prêmio do Seguro Rural?"></i></label>
+                            <select class="form-select" id="psr">
+                                <option value="">Selecione...</option>
+                                <option value="Sim">Sim</option>
+                                <option value="Não">Não</option>
+                            </select>
+                        </div>
+                    </div>
+
+                    <div class="observation">
+                        <i class="fas fa-info-circle me-2"></i><strong>Dica:</strong> A produtividade esperada e o valor
+                        da saca são fundamentais para o cálculo do potencial econômico da lavoura.
+                    </div>
+
+                    <div class="navigation-buttons">
+                        <button class="btn btn-secondary-custom" onclick="prevStep(2)">
+                            <i class="fas fa-arrow-left me-2"></i> Voltar
+                        </button>
+                        <button class="btn btn-custom" onclick="nextStep(2)">
+                            Próximo <i class="fas fa-arrow-right ms-2"></i>
+                        </button>
+                    </div>
+                </div>
+
+                <!-- Step 3: Análise de Solo -->
+                <div id="step3" class="step-container hidden">
+                    <div class="step-header">
+                        <h3><i class="fas fa-vial me-2"></i>Passo 3: Análise Química de Solo (0-20 cm)</h3>
+                    </div>
+
+                    <div class="row">
+                        <div class="col-md-3">
+                            <label for="ph" class="form-label">pH (CaCl₂)</label>
+                            <input type="number" step="0.1" class="form-control" id="ph" placeholder="Ex: 5.5">
+                        </div>
+                        <div class="col-md-3">
+                            <label for="fosforo" class="form-label">P (mg/dm³)</label>
+                            <input type="number" step="0.1" class="form-control" id="fosforo" placeholder="Ex: 12">
+                        </div>
+                        <div class="col-md-3">
+                            <label for="potassio" class="form-label">K (mmolc/dm³)</label>
+                            <input type="number" step="0.1" class="form-control" id="potassio" placeholder="Ex: 3.5">
+                        </div>
+                        <div class="col-md-3">
+                            <label for="calcio" class="form-label">Ca (mmolc/dm³)</label>
+                            <input type="number" step="0.1" class="form-control" id="calcio" placeholder="Ex: 28">
+                        </div>
+                    </div>
+
+                    <div class="row">
+                        <div class="col-md-3">
+                            <label for="magnesio" class="form-label">Mg (mmolc/dm³)</label>
+                            <input type="number" step="0.1" class="form-control" id="magnesio" placeholder="Ex: 10">
+                        </div>
+                        <div class="col-md-3">
+                            <label for="enxofre" class="form-label">S (mg/dm³)</label>
+                            <input type="number" step="0.1" class="form-control" id="enxofre" placeholder="Ex: 8">
+                        </div>
+                        <div class="col-md-3">
+                            <label for="aluminio" class="form-label">Al (mmolc/dm³)</label>
+                            <input type="number" step="0.1" class="form-control" id="aluminio" placeholder="Ex: 0.5">
+                        </div>
+                        <div class="col-md-3">
+                            <label for="ctc" class="form-label">CTC (mmolc/dm³)</label>
+                            <input type="number" step="0.1" class="form-control" id="ctc" placeholder="Ex: 80">
+                        </div>
+                    </div>
+
+                    <div class="row">
+                        <div class="col-md-4">
+                            <label for="saturacaoBases" class="form-label">Saturação por Bases (V%)</label>
+                            <input type="number" step="0.1" class="form-control" id="saturacaoBases"
+                                placeholder="Ex: 60">
+                        </div>
+                        <div class="col-md-4">
+                            <label for="saturacaoAluminio" class="form-label">Saturação por Al (m%)</label>
+                            <input type="number" step="0.1" class="form-control" id="saturacaoAluminio"
+                                placeholder="Ex: 5">
+                        </div>
+                        <div class="col-md-4">
+                            <label for="relacaoCaMg" class="form-label">Relação Ca/Mg</label>
+                            <input type="number" step="0.1" class="form-control" id="relacaoCaMg" placeholder="Ex: 2.8">
+                        </div>
+                    </div>
+
+                    <div class="observation">
+                        <i class="fas fa-lightbulb me-2"></i><strong>Importante:</strong> A análise de solo é a base
+                        para a correta recomendação de adubação e calagem.
+                    </div>
+
+                    <div class="navigation-buttons">
+                        <button class="btn btn-secondary-custom" onclick="prevStep(3)">
+                            <i class="fas fa-arrow-left me-2"></i> Voltar
+                        </button>
+                        <button class="btn btn-custom" onclick="nextStep(3)">
+                            Próximo <i class="fas fa-arrow-right ms-2"></i>
+                        </button>
+                    </div>
+                </div>
+
+                <!-- Step 4: Micronutrientes e Matéria Orgânica -->
+                <div id="step4" class="step-container hidden">
+                    <div class="step-header">
+                        <h3><i class="fas fa-atom me-2"></i>Passo 4: Micronutrientes e Matéria Orgânica</h3>
+                    </div>
+
+                    <div class="row">
+                        <div class="col-md-3">
+                            <label for="boro" class="form-label">B - Boro (mg/dm³)</label>
+                            <input type="number" step="0.01" class="form-control" id="boro" placeholder="Ex: 0.35">
+                        </div>
+                        <div class="col-md-3">
+                            <label for="cobre" class="form-label">Cu - Cobre (mg/dm³)</label>
+                            <input type="number" step="0.01" class="form-control" id="cobre" placeholder="Ex: 1.2">
+                        </div>
+                        <div class="col-md-3">
+                            <label for="ferro" class="form-label">Fe - Ferro (mg/dm³)</label>
+                            <input type="number" step="0.1" class="form-control" id="ferro" placeholder="Ex: 45">
+                        </div>
+                        <div class="col-md-3">
+                            <label for="manganes" class="form-label">Mn - Manganês (mg/dm³)</label>
+                            <input type="number" step="0.1" class="form-control" id="manganes" placeholder="Ex: 12">
+                        </div>
+                    </div>
+
+                    <div class="row">
+                        <div class="col-md-4">
+                            <label for="zinco" class="form-label">Zn - Zinco (mg/dm³)</label>
+                            <input type="number" step="0.1" class="form-control" id="zinco" placeholder="Ex: 2.5">
+                        </div>
+                        <div class="col-md-4">
+                            <label for="mo" class="form-label">M.O. - Matéria Orgânica (g/dm³)</label>
+                            <input type="number" step="0.1" class="form-control" id="mo" placeholder="Ex: 28">
+                        </div>
+                        <div class="col-md-4">
+                            <label for="carbono" class="form-label">C Orgânico (g/kg)</label>
+                            <input type="number" step="0.1" class="form-control" id="carbono" placeholder="Ex: 16">
+                        </div>
+                    </div>
+
+                    <div class="observation">
+                        <i class="fas fa-info-circle me-2"></i><strong>Observação:</strong> Os micronutrientes são
+                        essenciais para o desenvolvimento adequado das plantas, mesmo em pequenas quantidades.
+                    </div>
+
+                    <div class="navigation-buttons">
+                        <button class="btn btn-secondary-custom" onclick="prevStep(4)">
+                            <i class="fas fa-arrow-left me-2"></i> Voltar
+                        </button>
+                        <button class="btn btn-custom" onclick="nextStep(4)">
+                            Próximo <i class="fas fa-arrow-right ms-2"></i>
+                        </button>
+                    </div>
+                </div>
+
+                <!-- Step 5: Classificação Textural -->
+                <div id="step5" class="step-container hidden">
+                    <div class="step-header">
+                        <h3><i class="fas fa-layer-group me-2"></i>Passo 5: Classificação Textural do Solo</h3>
+                    </div>
+
+                    <div class="row">
+                        <div class="col-md-4">
+                            <label for="argila" class="form-label">Argila (%)</label>
+                            <input type="number" step="0.1" class="form-control" id="argila" placeholder="Ex: 45">
+                        </div>
+                        <div class="col-md-4">
+                            <label for="silte" class="form-label">Silte (%)</label>
+                            <input type="number" step="0.1" class="form-control" id="silte" placeholder="Ex: 25">
+                        </div>
+                        <div class="col-md-4">
+                            <label for="areia" class="form-label">Areia (%)</label>
+                            <input type="number" step="0.1" class="form-control" id="areia" placeholder="Ex: 30">
+                        </div>
+                    </div>
+
+                    <div class="row">
+                        <div class="col-md-12">
+                            <label for="classificacao" class="form-label">Classificação Textural</label>
+                            <select class="form-select" id="classificacao">
+                                <option value="">Selecione...</option>
+                                <option value="Arenosa">Arenosa (< 15% argila)</option>
+                                <option value="Média">Média (15-35% argila)</option>
+                                <option value="Argilosa">Argilosa (35-60% argila)</option>
+                                <option value="Muito Argilosa">Muito Argilosa (> 60% argila)</option>
+                            </select>
+                        </div>
+                    </div>
+
+                    <div class="observation">
+                        <i class="fas fa-flask me-2"></i><strong>Dica:</strong> A textura do solo influencia diretamente
+                        na retenção de água e nutrientes.
+                    </div>
+
+                    <div class="navigation-buttons">
+                        <button class="btn btn-secondary-custom" onclick="prevStep(5)">
+                            <i class="fas fa-arrow-left me-2"></i> Voltar
+                        </button>
+                        <button class="btn btn-custom" onclick="nextStep(5)">
+                            Próximo <i class="fas fa-arrow-right ms-2"></i>
+                        </button>
+                    </div>
+                </div>
+
+                <!-- Step 6: Estrutura Física -->
+                <div id="step6" class="step-container hidden">
+                    <div class="step-header">
+                        <h3><i class="fas fa-mountain me-2"></i>Passo 6: Estrutura Física e Conservação</h3>
+                    </div>
+
+                    <div class="row">
+                        <div class="col-md-4">
+                            <label for="materiaOrganica" class="form-label">Matéria Orgânica - MO (%)</label>
+                            <input type="number" step="0.1" class="form-control" id="materiaOrganica"
+                                placeholder="Ex: 3.2">
+                        </div>
+                        <div class="col-md-4">
+                            <label for="densidadeSolo" class="form-label">Densidade do Solo (g/cm³)</label>
+                            <input type="number" step="0.01" class="form-control" id="densidadeSolo"
+                                placeholder="Ex: 1.25">
+                        </div>
+                        <div class="col-md-4">
+                            <label for="compactacao" class="form-label">Grau de Compactação (%)</label>
+                            <input type="number" step="0.1" class="form-control" id="compactacao" placeholder="Ex: 75">
+                        </div>
+                    </div>
+
+                    <div class="observation">
+                        <i class="fas fa-info-circle me-2"></i><strong>Importante:</strong> A estrutura física do solo
+                        afeta a aeração, infiltração de água e desenvolvimento radicular.
+                    </div>
+
+                    <div class="navigation-buttons">
+                        <button class="btn btn-secondary-custom" onclick="prevStep(6)">
+                            <i class="fas fa-arrow-left me-2"></i> Voltar
+                        </button>
+                        <button class="btn btn-custom" onclick="nextStep(6)">
+                            Próximo <i class="fas fa-arrow-right ms-2"></i>
+                        </button>
+                    </div>
+                </div>
+
+                <!-- Step 7: Sobre o Manejo -->
+                <div id="step7" class="step-container hidden">
+                    <div class="step-header">
+                        <h3><i class="fas fa-tractor me-2"></i>Passo 7: Sobre o Manejo</h3>
+                    </div>
+
+                    <div class="mb-4">
+                        <label class="form-label"><strong>1. Preparo e Conservação do Solo</strong></label>
+                        <div class="form-check">
+                            <input class="form-check-input" type="radio" name="preparoSolo" id="preparoA" value="A">
+                            <label class="form-check-label" for="preparoA">
+                                <strong>A)</strong> Preparo convencional com uso frequente de grades aradoras e
+                                niveladoras, mantendo o solo descoberto em parte do ano e sem o uso de terraços.
+                            </label>
+                        </div>
+                        <div class="form-check">
+                            <input class="form-check-input" type="radio" name="preparoSolo" id="preparoB" value="B">
+                            <label class="form-check-label" for="preparoB">
+                                <strong>B)</strong> Uso de cultivo mínimo com escarificação periódica para romper
+                                camadas compactadas, mas com baixa adoção de rotação de culturas.
+                            </label>
+                        </div>
+                        <div class="form-check">
+                            <input class="form-check-input" type="radio" name="preparoSolo" id="preparoC" value="C">
+                            <label class="form-check-label" for="preparoC">
+                                <strong>C)</strong> Sistema Plantio Direto (SPD) com manutenção de palhada, porém focado
+                                apenas na sucessão soja/milho, sem diversificação de outras espécies.
+                            </label>
+                        </div>
+                        <div class="form-check">
+                            <input class="form-check-input" type="radio" name="preparoSolo" id="preparoD" value="D">
+                            <label class="form-check-label" for="preparoD">
+                                <strong>D)</strong> SPD consolidado com rotação diversificada de culturas e manutenção
+                                permanente de alta cobertura vegetal (mínimo 6 a 7 t/ha de matéria seca).
+                            </label>
+                        </div>
+                    </div>
+
+                    <div class="mb-4">
+                        <label class="form-label"><strong>2. Operação de Semeadura</strong></label>
+                        <div class="form-check">
+                            <input class="form-check-input" type="radio" name="semeadura" id="semeaduraA" value="A">
+                            <label class="form-check-label" for="semeaduraA">
+                                <strong>A)</strong> Foco no alto rendimento operacional, operando com velocidades
+                                superiores a 8,5 km/h para aproveitar janelas curtas, mesmo com risco de falhas na
+                                distribuição.
+                            </label>
+                        </div>
+                        <div class="form-check">
+                            <input class="form-check-input" type="radio" name="semeadura" id="semeaduraB" value="B">
+                            <label class="form-check-label" for="semeaduraB">
+                                <strong>B)</strong> Plantio em velocidades entre 7 e 8 km/h utilizando semeadoras com
+                                dosadores de disco mecânico e sem classificação rigorosa das sementes.
+                            </label>
+                        </div>
+                        <div class="form-check">
+                            <input class="form-check-input" type="radio" name="semeadura" id="semeaduraC" value="C">
+                            <label class="form-check-label" for="semeaduraC">
+                                <strong>C)</strong> Semeadura entre 5 e 6 km/h utilizando sementes de qualidade tratadas
+                                industrialmente e dosadores regulados a cada safra.
+                            </label>
+                        </div>
+                        <div class="form-check">
+                            <input class="form-check-input" type="radio" name="semeadura" id="semeaduraD" value="D">
+                            <label class="form-check-label" for="semeaduraD">
+                                <strong>D)</strong> Velocidade controlada (4 a 5 km/h) com dosadores pneumáticos,
+                                sementes de alto vigor e precisão na profundidade de deposição (3 a 5 cm).
+                            </label>
+                        </div>
+                    </div>
+
+                    <div class="mb-4">
+                        <label class="form-label"><strong>3. Gestão da Fertilidade</strong></label>
+                        <div class="form-check">
+                            <input class="form-check-input" type="radio" name="fertilidade" id="fertilidadeA" value="A">
+                            <label class="form-check-label" for="fertilidadeA">
+                                <strong>A)</strong> Adubação baseada em experiências locais ou "pela média" da região,
+                                sem a realização frequente de análises laboratoriais de solo.
+                            </label>
+                        </div>
+                        <div class="form-check">
+                            <input class="form-check-input" type="radio" name="fertilidade" id="fertilidadeB" value="B">
+                            <label class="form-check-label" for="fertilidadeB">
+                                <strong>B)</strong> Realização de análise de solo de rotina (0-20 cm) com aplicação de
+                                doses fixas e uniformes de fertilizantes em todo o talhão.
+                            </label>
+                        </div>
+                        <div class="form-check">
+                            <input class="form-check-input" type="radio" name="fertilidade" id="fertilidadeC" value="C">
+                            <label class="form-check-label" for="fertilidadeC">
+                                <strong>C)</strong> Correção baseada em análises de solo periódicas (incluindo 20-40 cm
+                                para gessagem) e adubação de manutenção para repor a exportação da soja e milho.
+                            </label>
+                        </div>
+                        <div class="form-check">
+                            <input class="form-check-input" type="radio" name="fertilidade" id="fertilidadeD" value="D">
+                            <label class="form-check-label" for="fertilidadeD">
+                                <strong>D)</strong> Adubação de sistemas baseada no balanço de nutrientes
+                                (entradas/saídas) e uso de Agricultura de Precisão para aplicação em taxa variável.
+                            </label>
+                        </div>
+                    </div>
+
+                    <div class="mb-4">
+                        <label class="form-label"><strong>4. Manejo Integrado de Pragas (MIP)</strong></label>
+                        <div class="form-check">
+                            <input class="form-check-input" type="radio" name="mip" id="mipA" value="A">
+                            <label class="form-check-label" for="mipA">
+                                <strong>A)</strong> Aplicações preventivas e calendarizadas (junto com outras
+                                operações), utilizando misturas de amplo espectro para "garantir" a produtividade.
+                            </label>
+                        </div>
+                        <div class="form-check">
+                            <input class="form-check-input" type="radio" name="mip" id="mipB" value="B">
+                            <label class="form-check-label" for="mipB">
+                                <strong>B)</strong> Realização de pulverizações baseadas em observações visuais rápidas
+                                ou apenas quando os danos já são evidentes nas plantas.
+                            </label>
+                        </div>
+                        <div class="form-check">
+                            <input class="form-check-input" type="radio" name="mip" id="mipC" value="C">
+                            <label class="form-check-label" for="mipC">
+                                <strong>C)</strong> Uso do Manejo Integrado (MIP), com monitoramento semanal
+                                (pano-de-batida) e aplicação baseada nos Níveis de Dano Econômico (NDE).
+                            </label>
+                        </div>
+                        <div class="form-check">
+                            <input class="form-check-input" type="radio" name="mip" id="mipD" value="D">
+                            <label class="form-check-label" for="mipD">
+                                <strong>D)</strong> Uso de monitoramento digital (IA e sensoriamento remoto) para
+                                identificar a assinatura espectral de pragas e doenças antes do dano visual ocorrer.
+                            </label>
+                        </div>
+                    </div>
+
+                    <div class="mb-4">
+                        <label class="form-label"><strong>5. Diversificação do Sistema Produtivo</strong></label>
+                        <div class="form-check">
+                            <input class="form-check-input" type="radio" name="diversificacao" id="diversificacaoA"
+                                value="A">
+                            <label class="form-check-label" for="diversificacaoA">
+                                <strong>A)</strong> Monocultivo ou sucessão soja/pousio no inverno, com baixa adição de
+                                fitomassa ao longo do tempo.
+                            </label>
+                        </div>
+                        <div class="form-check">
+                            <input class="form-check-input" type="radio" name="diversificacao" id="diversificacaoB"
+                                value="B">
+                            <label class="form-check-label" for="diversificacaoB">
+                                <strong>B)</strong> Sucessão soja no verão e milho na segunda safra (safrinha),
+                                priorizando a renda imediata, mas com períodos de solo descoberto.
+                            </label>
+                        </div>
+                        <div class="form-check">
+                            <input class="form-check-input" type="radio" name="diversificacao" id="diversificacaoC"
+                                value="C">
+                            <label class="form-check-label" for="diversificacaoC">
+                                <strong>C)</strong> Rotação de culturas que inclui cereais de inverno (trigo/aveia) ou
+                                plantas de cobertura (nabo/milheto/crotalária/brachiária) para proteger o solo.
+                            </label>
+                        </div>
+                        <div class="form-check">
+                            <input class="form-check-input" type="radio" name="diversificacao" id="diversificacaoD"
+                                value="D">
+                            <label class="form-check-label" for="diversificacaoD">
+                                <strong>D)</strong> Sistemas de Integração Lavoura-Pecuária (ILP/ILPF) com pastagens
+                                perenes (braquiárias) para maximizar a matéria orgânica e a resiliência estrutural do
+                                solo.
+                            </label>
+                        </div>
+                    </div>
+
+                    <div class="observation">
+                        <i class="fas fa-lightbulb me-2"></i><strong>Dica:</strong> As práticas de manejo adotadas
+                        impactam diretamente na sustentabilidade e produtividade da lavoura.
+                    </div>
+
+                    <div class="navigation-buttons">
+                        <button class="btn btn-secondary-custom" onclick="prevStep(7)">
+                            <i class="fas fa-arrow-left me-2"></i> Voltar
+                        </button>
+                        <button class="btn btn-custom" onclick="nextStep(7)">
+                            Ver Resumo <i class="fas fa-arrow-right ms-2"></i>
+                        </button>
+                    </div>
+                </div>
+
+                <!-- Step 8: Resumo -->
+                <div id="step8" class="step-container hidden">
+                    <div class="step-header">
+                        <h3><i class="fas fa-clipboard-check me-2"></i>Passo 8: Resumo das Informações</h3>
+                    </div>
+
+                    <div id="resumoContent">
+                        <!-- O conteúdo será gerado dinamicamente pelo JavaScript -->
+                    </div>
+
+                    <div class="observation mt-4">
+                        <i class="fas fa-check-circle me-2"></i><strong>Próximos Passos:</strong> Revise as informações
+                        e utilize os botões abaixo para gerar o PDF ou enviar o relatório.
+                    </div>
+
+                    <div class="navigation-buttons">
+                        <button class="btn btn-secondary-custom" onclick="prevStep(8)">
+                            <i class="fas fa-arrow-left me-2"></i> Voltar
+                        </button>
+                        <div>
+                            <button class="btn btn-success me-2" onclick="gerarPDF()">
+                                <i class="fas fa-file-pdf me-2"></i>Gerar PDF
+                            </button>
+                            <button class="btn btn-primary me-2" onclick="enviarWhatsApp()">
+                                <i class="fab fa-whatsapp me-2"></i>WhatsApp
+                            </button>
+                            <button class="btn btn-info" onclick="enviarEmail()">
+                                <i class="fas fa-envelope me-2"></i>E-mail
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <footer class="text-center mt-5 mb-4"
+        style="font-size: 0.85rem; color: #666; border-top: 1px solid #ddd; padding-top: 20px;">
+        <p><strong>© 2026 Toyota Tsusho Corretora de Seguros - Todos os direitos reservados.</strong><br>
+            Esta aplicação e sua metodologia são de propriedade exclusiva da Toyota Tsusho Corretora de Seguros. <br>
+            O compartilhamento, reprodução ou distribuição não autorizada é estritamente proibido.</p>
+    </footer>
+
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/js/bootstrap.bundle.min.js"></script>
+    <script>
+        // Dados das fazendas
+        const dadosFazendas = {
+            'alvorada': {
+                cnpj: '15.008.569/0002-51',
+                cidade: 'Couto de Magalhães/TO'
+            },
+            'colorado': {
+                cnpj: '15.004.403/0002-67',
+                cidade: 'Lagoa da Confusão/TO'
+            },
+            'flores': {
+                cnpj: '16.844.016/0002-00',
+                cidade: 'Piraquê/TO'
+            },
+            'talisma': {
+                cnpj: '97.537.641/0002-00',
+                cidade: 'Talismã/TO'
+            },
+            'guarabu': {
+                cnpj: '16.843.991/0002-95',
+                cidade: 'Araguaína/TO'
+            }
+        };
+
+        // Função para preencher dados da fazenda automaticamente
+        function preencherDadosFazenda() {
+            console.log('=== preencherDadosFazenda chamada ===');
+            const selectFazenda = document.getElementById('fazenda');
+            const valorSelecionado = selectFazenda.value;
+            console.log('Valor selecionado:', valorSelecionado);
+            console.log('Dados disponíveis:', dadosFazendas);
+
+            if (valorSelecionado && dadosFazendas[valorSelecionado]) {
+                console.log('Preenchendo com:', dadosFazendas[valorSelecionado]);
+                document.getElementById('cnpj').value = dadosFazendas[valorSelecionado].cnpj;
+                document.getElementById('cidadeEstado').value = dadosFazendas[valorSelecionado].cidade;
+                console.log('CNPJ preenchido:', document.getElementById('cnpj').value);
+                console.log('Cidade preenchida:', document.getElementById('cidadeEstado').value);
+            } else {
+                console.log('Limpando campos');
+                document.getElementById('cnpj').value = '';
+                document.getElementById('cidadeEstado').value = '';
+            }
+        }
+
+        // Adicionar listener para o select de fazendas imediatamente após a função
+        const selectFazenda = document.getElementById('fazenda');
+        if (selectFazenda) {
+            selectFazenda.addEventListener('change', preencherDadosFazenda);
+        }
+
+        // Objeto para armazenar os dados do formulário
+        let formData = {
+            step1: {},
+            step2: {},
+            step3: {},
+            step4: {},
+            step5: {},
+            step6: {},
+            step7: {}
+        };
+
+        // Função para salvar dados do passo atual
+        function saveStepData(stepNumber) {
+            switch (stepNumber) {
+                case 1:
+                    const selectFazenda = document.getElementById('fazenda');
+                    const nomeFazenda = selectFazenda.options[selectFazenda.selectedIndex].text;
+                    formData.step1 = {
+                        fazenda: nomeFazenda !== 'Selecione uma fazenda...' ? nomeFazenda : '',
+                        cnpj: document.getElementById('cnpj').value,
+                        cidadeEstado: document.getElementById('cidadeEstado').value,
+                        hectares: document.getElementById('hectares').value
+                    };
+                    break;
+                case 2:
+                    formData.step2 = {
+                        cultivar: document.getElementById('cultivar').value,
+                        grupoCultivar: document.getElementById('grupoCultivar').value,
+                        dataPlantio: document.getElementById('dataPlantio').value,
+                        tecnicaPlantio: document.getElementById('tecnicaPlantio').value,
+                        produtividade: document.getElementById('produtividade').value,
+                        valorSaca: document.getElementById('valorSaca').value,
+                        psr: document.getElementById('psr').value
+                    };
+                    break;
+                case 3:
+                    formData.step3 = {
+                        ph: document.getElementById('ph').value,
+                        fosforo: document.getElementById('fosforo').value,
+                        potassio: document.getElementById('potassio').value,
+                        calcio: document.getElementById('calcio').value,
+                        magnesio: document.getElementById('magnesio').value,
+                        enxofre: document.getElementById('enxofre').value,
+                        aluminio: document.getElementById('aluminio').value,
+                        ctc: document.getElementById('ctc').value,
+                        saturacaoBases: document.getElementById('saturacaoBases').value,
+                        saturacaoAluminio: document.getElementById('saturacaoAluminio').value,
+                        relacaoCaMg: document.getElementById('relacaoCaMg').value
+                    };
+                    break;
+                case 4:
+                    formData.step4 = {
+                        boro: document.getElementById('boro').value,
+                        cobre: document.getElementById('cobre').value,
+                        ferro: document.getElementById('ferro').value,
+                        manganes: document.getElementById('manganes').value,
+                        zinco: document.getElementById('zinco').value,
+                        mo: document.getElementById('mo').value,
+                        carbono: document.getElementById('carbono').value
+                    };
+                    break;
+                case 5:
+                    formData.step5 = {
+                        argila: document.getElementById('argila').value,
+                        silte: document.getElementById('silte').value,
+                        areia: document.getElementById('areia').value,
+                        classificacao: document.getElementById('classificacao').value
+                    };
+                    break;
+                case 6:
+                    formData.step6 = {
+                        materiaOrganica: document.getElementById('materiaOrganica').value,
+                        densidadeSolo: document.getElementById('densidadeSolo').value,
+                        compactacao: document.getElementById('compactacao').value
+                    };
+                    break;
+                case 7:
+                    formData.step7 = {
+                        preparoSolo: document.querySelector('input[name="preparoSolo"]:checked')?.value,
+                        semeadura: document.querySelector('input[name="semeadura"]:checked')?.value,
+                        fertilidade: document.querySelector('input[name="fertilidade"]:checked')?.value,
+                        mip: document.querySelector('input[name="mip"]:checked')?.value,
+                        diversificacao: document.querySelector('input[name="diversificacao"]:checked')?.value
+                    };
+                    break;
+            }
+        }
+
+        // Função para validar campos obrigatórios
+        function validateStep(stepNumber) {
+            let isValid = true;
+            let campos = [];
+
+            switch (stepNumber) {
+                case 1:
+                    campos = ['fazenda', 'cnpj', 'cidadeEstado', 'hectares'];
+                    // Validação do Termo de Uso
+                    const termo = document.getElementById('termoUso');
+                    if (termo && !termo.checked) {
+                        termo.classList.add('is-invalid');
+                        isValid = false;
+                    } else if (termo) {
+                        termo.classList.remove('is-invalid');
+                    }
+                    break;
+                case 2:
+                    campos = ['cultivar', 'grupoCultivar', 'dataPlantio', 'tecnicaPlantio', 'produtividade', 'valorSaca'];
+                    break;
+                // Steps 3-6 não têm campos obrigatórios
+                default:
+                    return true;
+            }
+
+            campos.forEach(campo => {
+                const element = document.getElementById(campo);
+                if (!element.value.trim()) {
+                    element.classList.add('is-invalid');
+                    isValid = false;
+                } else {
+                    element.classList.remove('is-invalid');
+                }
+            });
+
+            if (!isValid) {
+                alert('Por favor, preencha todos os campos obrigatórios marcados com *');
+            }
+
+            return isValid;
+        }
+
+        // Função para avançar para o próximo passo
+        function nextStep(currentStep) {
+            // Salvar dados do passo atual
+            saveStepData(currentStep);
+
+            // Validar campos obrigatórios
+            if (!validateStep(currentStep)) {
+                return;
+            }
+
+            // Ocultar passo atual
+            document.getElementById('step' + currentStep).classList.add('hidden');
+
+            // Mostrar próximo passo
+            const nextStepNumber = currentStep + 1;
+            document.getElementById('step' + nextStepNumber).classList.remove('hidden');
+
+            // Atualizar indicadores
+            document.getElementById('indicator-' + currentStep).classList.remove('active');
+            document.getElementById('indicator-' + currentStep).classList.add('completed');
+            document.getElementById('indicator-' + nextStepNumber).classList.add('active');
+
+            // Atualizar barra de progresso
+            const progress = (nextStepNumber / 8) * 100;
+            document.getElementById('progressBar').style.width = progress + '%';
+            document.getElementById('progressBar').setAttribute('aria-valuenow', progress);
+
+            // Se for o último passo, gerar resumo
+            if (nextStepNumber === 8) {
+                gerarResumo();
+            }
+
+            // Scroll para o topo
+            window.scrollTo(0, 0);
+        }
+
+        // Função para voltar ao passo anterior
+        function prevStep(currentStep) {
+            // Salvar dados do passo atual
+            saveStepData(currentStep);
+
+            // Ocultar passo atual
+            document.getElementById('step' + currentStep).classList.add('hidden');
+
+            // Mostrar passo anterior
+            const prevStepNumber = currentStep - 1;
+            document.getElementById('step' + prevStepNumber).classList.remove('hidden');
+
+            // Atualizar indicadores
+            document.getElementById('indicator-' + currentStep).classList.remove('active');
+            document.getElementById('indicator-' + prevStepNumber).classList.remove('completed');
+            document.getElementById('indicator-' + prevStepNumber).classList.add('active');
+
+            // Atualizar barra de progresso
+            const progress = (prevStepNumber / 8) * 100;
+            document.getElementById('progressBar').style.width = progress + '%';
+            document.getElementById('progressBar').setAttribute('aria-valuenow', progress);
+
+            // Scroll para o topo
+            window.scrollTo(0, 0);
+        }
+
+        // Função para gerar o resumo
+        function gerarResumo() {
+            const resumoContent = document.getElementById('resumoContent');
+            let html = '';
+
+            // Dados Básicos
+            html += `<div class="card mb-4">
+                <div class="card-header bg-success text-white">
+                    <h5 class="mb-0"><i class="fas fa-building me-2"></i>Dados Básicos da Propriedade</h5>
+                </div>
+                <div class="card-body">
+                    <div class="summary-item row">
+                        <div class="col-md-3 summary-label">CNPJ/CPF:</div>
+                        <div class="col-md-9 summary-value">${formData.step1.cnpj || 'Não preenchido'}</div>
+                    </div>
+                    <div class="summary-item row">
+                        <div class="col-md-3 summary-label">Fazenda:</div>
+                        <div class="col-md-9 summary-value">${formData.step1.fazenda || 'Não preenchido'}</div>
+                    </div>
+                    <div class="summary-item row">
+                        <div class="col-md-3 summary-label">Cidade/Estado:</div>
+                        <div class="col-md-9 summary-value">${formData.step1.cidadeEstado || 'Não preenchido'}</div>
+                    </div>
+                    <div class="summary-item row">
+                        <div class="col-md-3 summary-label">Área Total:</div>
+                        <div class="col-md-9 summary-value">${formData.step1.hectares || 'Não preenchido'} hectares</div>
+                    </div>
+                </div>
+            </div>`;
+
+            // Dados de Cotação
+            html += `<div class="card mb-4">
+                <div class="card-header bg-success text-white">
+                    <h5 class="mb-0"><i class="fas fa-seedling me-2"></i>Dados de Cotação</h5>
+                </div>
+                <div class="card-body">
+                    <div class="summary-item row">
+                        <div class="col-md-3 summary-label">Cultivar:</div>
+                        <div class="col-md-9 summary-value">${formData.step2.cultivar || 'Não preenchido'}</div>
+                    </div>
+                    <div class="summary-item row">
+                        <div class="col-md-3 summary-label">Grupo de Maturação:</div>
+                        <div class="col-md-9 summary-value">${formData.step2.grupoCultivar || 'Não preenchido'}</div>
+                    </div>
+                    <div class="summary-item row">
+                        <div class="col-md-3 summary-label">Data de Plantio:</div>
+                        <div class="col-md-9 summary-value">${formData.step2.dataPlantio || 'Não preenchido'}</div>
+                    </div>
+                    <div class="summary-item row">
+                        <div class="col-md-3 summary-label">Técnica de Plantio:</div>
+                        <div class="col-md-9 summary-value">${formData.step2.tecnicaPlantio || 'Não preenchido'}</div>
+                    </div>
+                    <div class="summary-item row">
+                        <div class="col-md-3 summary-label">Produtividade Esperada:</div>
+                        <div class="col-md-9 summary-value">${formData.step2.produtividade || 'Não preenchido'} sc/ha</div>
+                    </div>
+                    <div class="summary-item row">
+                        <div class="col-md-3 summary-label">Valor da Saca:</div>
+                        <div class="col-md-9 summary-value">R$ ${formData.step2.valorSaca || 'Não preenchido'}</div>
+                    </div>
+                    <div class="summary-item row">
+                        <div class="col-md-3 summary-label">PSR:</div>
+                        <div class="col-md-9 summary-value">${formData.step2.psr || 'Não preenchido'}</div>
+                    </div>
+                </div>
+            </div>`;
+
+            // Análise Química (se preenchido)
+            if (formData.step3.ph || formData.step3.fosforo) {
+                html += `<div class="card mb-4">
+                    <div class="card-header bg-success text-white">
+                        <h5 class="mb-0"><i class="fas fa-vial me-2"></i>Análise Química de Solo</h5>
+                    </div>
+                    <div class="card-body">
+                        <div class="row">
+                            <div class="col-md-3">
+                                <div class="summary-item">
+                                    <div class="summary-label">pH:</div>
+                                    <div class="summary-value">${formData.step3.ph || '-'}</div>
+                                </div>
+                            </div>
+                            <div class="col-md-3">
+                                <div class="summary-item">
+                                    <div class="summary-label">P:</div>
+                                    <div class="summary-value">${formData.step3.fosforo || '-'} mg/dm³</div>
+                                </div>
+                            </div>
+                            <div class="col-md-3">
+                                <div class="summary-item">
+                                    <div class="summary-label">K:</div>
+                                    <div class="summary-value">${formData.step3.potassio || '-'} mmolc/dm³</div>
+                                </div>
+                            </div>
+                            <div class="col-md-3">
+                                <div class="summary-item">
+                                    <div class="summary-label">Ca:</div>
+                                    <div class="summary-value">${formData.step3.calcio || '-'} mmolc/dm³</div>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="row">
+                            <div class="col-md-3">
+                                <div class="summary-item">
+                                    <div class="summary-label">Mg:</div>
+                                    <div class="summary-value">${formData.step3.magnesio || '-'} mmolc/dm³</div>
+                                </div>
+                            </div>
+                            <div class="col-md-3">
+                                <div class="summary-item">
+                                    <div class="summary-label">S:</div>
+                                    <div class="summary-value">${formData.step3.enxofre || '-'} mg/dm³</div>
+                                </div>
+                            </div>
+                            <div class="col-md-3">
+                                <div class="summary-item">
+                                    <div class="summary-label">CTC:</div>
+                                    <div class="summary-value">${formData.step3.ctc || '-'} mmolc/dm³</div>
+                                </div>
+                            </div>
+                            <div class="col-md-3">
+                                <div class="summary-item">
+                                    <div class="summary-label">V%:</div>
+                                    <div class="summary-value">${formData.step3.saturacaoBases || '-'}%</div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>`;
+            }
+
+            // Micronutrientes (se preenchido)
+            if (formData.step4.boro || formData.step4.mo) {
+                html += `<div class="card mb-4">
+                    <div class="card-header bg-success text-white">
+                        <h5 class="mb-0"><i class="fas fa-atom me-2"></i>Micronutrientes e Matéria Orgânica</h5>
+                    </div>
+                    <div class="card-body">
+                        <div class="row">
+                            <div class="col-md-2">
+                                <div class="summary-item">
+                                    <div class="summary-label">B:</div>
+                                    <div class="summary-value">${formData.step4.boro || '-'}</div>
+                                </div>
+                            </div>
+                            <div class="col-md-2">
+                                <div class="summary-item">
+                                    <div class="summary-label">Cu:</div>
+                                    <div class="summary-value">${formData.step4.cobre || '-'}</div>
+                                </div>
+                            </div>
+                            <div class="col-md-2">
+                                <div class="summary-item">
+                                    <div class="summary-label">Fe:</div>
+                                    <div class="summary-value">${formData.step4.ferro || '-'}</div>
+                                </div>
+                            </div>
+                            <div class="col-md-2">
+                                <div class="summary-item">
+                                    <div class="summary-label">Mn:</div>
+                                    <div class="summary-value">${formData.step4.manganes || '-'}</div>
+                                </div>
+                            </div>
+                            <div class="col-md-2">
+                                <div class="summary-item">
+                                    <div class="summary-label">Zn:</div>
+                                    <div class="summary-value">${formData.step4.zinco || '-'}</div>
+                                </div>
+                            </div>
+                            <div class="col-md-2">
+                                <div class="summary-item">
+                                    <div class="summary-label">M.O.:</div>
+                                    <div class="summary-value">${formData.step4.mo || '-'} g/dm³</div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>`;
+            }
+
+            // Classificação Textural (se preenchido)
+            if (formData.step5.argila || formData.step5.classificacao) {
+                html += `<div class="card mb-4">
+                    <div class="card-header bg-success text-white">
+                        <h5 class="mb-0"><i class="fas fa-layer-group me-2"></i>Classificação Textural</h5>
+                    </div>
+                    <div class="card-body">
+                        <div class="summary-item row">
+                            <div class="col-md-3 summary-label">Argila:</div>
+                            <div class="col-md-3 summary-value">${formData.step5.argila || '-'}%</div>
+                            <div class="col-md-3 summary-label">Silte:</div>
+                            <div class="col-md-3 summary-value">${formData.step5.silte || '-'}%</div>
+                        </div>
+                        <div class="summary-item row">
+                            <div class="col-md-3 summary-label">Areia:</div>
+                            <div class="col-md-3 summary-value">${formData.step5.areia || '-'}%</div>
+                            <div class="col-md-3 summary-label">Classificação:</div>
+                            <div class="col-md-3 summary-value">${formData.step5.classificacao || '-'}</div>
+                        </div>
+                    </div>
+                </div>`;
+            }
+
+            // Estrutura Física (se preenchido)
+            if (formData.step6.materiaOrganica || formData.step6.densidadeSolo) {
+                html += `<div class="card mb-4">
+                    <div class="card-header bg-success text-white">
+                        <h5 class="mb-0"><i class="fas fa-mountain me-2"></i>Estrutura Física e Conservação</h5>
+                    </div>
+                    <div class="card-body">
+                        <div class="summary-item row">
+                            <div class="col-md-4 summary-label">Matéria Orgânica:</div>
+                            <div class="col-md-8 summary-value">${formData.step6.materiaOrganica || '-'}%</div>
+                        </div>
+                        <div class="summary-item row">
+                            <div class="col-md-4 summary-label">Densidade do Solo:</div>
+                            <div class="col-md-8 summary-value">${formData.step6.densidadeSolo || '-'} g/cm³</div>
+                        </div>
+                        <div class="summary-item row">
+                            <div class="col-md-4 summary-label">Grau de Compactação:</div>
+                            <div class="col-md-8 summary-value">${formData.step6.compactacao || '-'}%</div>
+                        </div>
+                    </div>
+                </div>`;
+            }
+
+            // Sobre o Manejo (se preenchido)
+            if (formData.step7.preparoSolo || formData.step7.semeadura) {
+                html += `<div class="card mb-4">
+                    <div class="card-header bg-success text-white">
+                        <h5 class="mb-0"><i class="fas fa-tractor me-2"></i>Sobre o Manejo</h5>
+                    </div>
+                    <div class="card-body">
+                        <div class="summary-item">
+                            <div class="summary-label">Preparo e Conservação do Solo:</div>
+                            <div class="summary-value">${getRespostaManejo('preparoSolo', formData.step7.preparoSolo) || 'Não preenchido'}</div>
+                        </div>
+                        <div class="summary-item">
+                            <div class="summary-label">Operação de Semeadura:</div>
+                            <div class="summary-value">${getRespostaManejo('semeadura', formData.step7.semeadura) || 'Não preenchido'}</div>
+                        </div>
+                        <div class="summary-item">
+                            <div class="summary-label">Gestão da Fertilidade:</div>
+                            <div class="summary-value">${getRespostaManejo('fertilidade', formData.step7.fertilidade) || 'Não preenchido'}</div>
+                        </div>
+                        <div class="summary-item">
+                            <div class="summary-label">Manejo Integrado de Pragas:</div>
+                            <div class="summary-value">${getRespostaManejo('mip', formData.step7.mip) || 'Não preenchido'}</div>
+                        </div>
+                        <div class="summary-item">
+                            <div class="summary-label">Diversificação do Sistema:</div>
+                            <div class="summary-value">${getRespostaManejo('diversificacao', formData.step7.diversificacao) || 'Não preenchido'}</div>
+                        </div>
+                    </div>
+                </div>`;
+            }
+
+            resumoContent.innerHTML = html;
+        }
+
+        // Função para obter a resposta completa do manejo
+        function getRespostaManejo(campo, letra) {
+            if (!letra) return '';
+
+            const respostas = {
+                'A': {
+                    'preparoSolo': 'A) Preparo convencional com uso frequente de grades aradoras e niveladoras, mantendo o solo descoberto em parte do ano e sem o uso de terraços.',
+                    'semeadura': 'A) Foco no alto rendimento operacional, operando com velocidades superiores a 8,5 km/h para aproveitar janelas curtas, mesmo com risco de falhas na distribuição.',
+                    'fertilidade': 'A) Adubação baseada em experiências locais ou "pela média" da região, sem a realização frequente de análises laboratoriais de solo.',
+                    'mip': 'A) Aplicações preventivas e calendarizadas (junto com outras operações), utilizando misturas de amplo espectro para "garantir" a produtividade.',
+                    'diversificacao': 'A) Monocultivo ou sucessão soja/pousio no inverno, com baixa adição de fitomassa ao longo do tempo.'
+                },
+                'B': {
+                    'preparoSolo': 'B) Uso de cultivo mínimo com escarificação periódica para romper camadas compactadas, mas com baixa adoção de rotação de culturas.',
+                    'semeadura': 'B) Plantio em velocidades entre 7 e 8 km/h utilizando semeadoras com dosadores de disco mecânico e sem classificação rigorosa das sementes.',
+                    'fertilidade': 'B) Realização de análise de solo de rotina (0-20 cm) com aplicação de doses fixas e uniformes de fertilizantes em todo o talhão.',
+                    'mip': 'B) Realização de pulverizações baseadas em observações visuais rápidas ou apenas quando os danos já são evidentes nas plantas.',
+                    'diversificacao': 'B) Sucessão soja no verão e milho na segunda safra (safrinha), priorizando a renda imediata, mas com períodos de solo descoberto.'
+                },
+                'C': {
+                    'preparoSolo': 'C) Sistema Plantio Direto (SPD) com manutenção de palhada, porém focado apenas na sucessão soja/milho, sem diversificação de outras espécies.',
+                    'semeadura': 'C) Semeadura entre 5 e 6 km/h utilizando sementes de qualidade tratadas industrialmente e dosadores regulados a cada safra.',
+                    'fertilidade': 'C) Correção baseada em análises de solo periódicas (incluindo 20-40 cm para gessagem) e adubação de manutenção para repor a exportação da soja e milho.',
+                    'mip': 'C) Uso do Manejo Integrado (MIP), com monitoramento semanal (pano-de-batida) e aplicação baseada nos Níveis de Dano Econômico (NDE).',
+                    'diversificacao': 'C) Rotação de culturas que inclui cereais de inverno (trigo/aveia) ou plantas de cobertura (nabo/milheto/crotalária/brachiária) para proteger o solo.'
+                },
+                'D': {
+                    'preparoSolo': 'D) SPD consolidado com rotação diversificada de culturas e manutenção permanente de alta cobertura vegetal (mínimo 6 a 7 t/ha de matéria seca).',
+                    'semeadura': 'D) Velocidade controlada (4 a 5 km/h) com dosadores pneumáticos, sementes de alto vigor e precisão na profundidade de deposição (3 a 5 cm).',
+                    'fertilidade': 'D) Adubação de sistemas baseada no balanço de nutrientes (entradas/saídas) e uso de Agricultura de Precisão para aplicação em taxa variável.',
+                    'mip': 'D) Uso de monitoramento digital (IA e sensoriamento remoto) para identificar a assinatura espectral de pragas e doenças antes do dano visual ocorrer.',
+                    'diversificacao': 'D) Sistemas de Integração Lavoura-Pecuária (ILP/ILPF) com pastagens perenes (braquiárias) para maximizar a matéria orgânica e a resiliência estrutural do solo.'
+                }
+            };
+
+            return respostas[letra][campo] || '';
+        }
+
+        // Função para gerar PDF
+        function gerarPDF() {
+            alert('Função de geração de PDF. Em uma implementação real, o PDF seria gerado e baixado automaticamente.');
+        }
+
+        // Função para enviar por WhatsApp
+        function enviarWhatsApp() {
+            let mensagem = "📊 *RELATÓRIO SCORE LAVOURAS*\n";
+            mensagem += "═══════════════════════════════\n\n";
+
+            mensagem += "🏢 *DADOS BÁSICOS DA PROPRIEDADE*\n";
+            mensagem += `📋 Fazenda: ${formData.step1.fazenda || 'N/A'}\n`;
+            mensagem += `🆔 CNPJ: ${formData.step1.cnpj || 'N/A'}\n`;
+            mensagem += `📍 Cidade/Estado: ${formData.step1.cidadeEstado || 'N/A'}\n`;
+            mensagem += `📐 Área Total: ${formData.step1.hectares || 'N/A'} hectares\n\n`;
+
+            mensagem += "🌱 *DADOS DE COTAÇÃO*\n";
+            mensagem += `🌾 Cultivar: ${formData.step2.cultivar || 'N/A'}\n`;
+            mensagem += `📊 Grupo de Maturação: ${formData.step2.grupoCultivar || 'N/A'}\n`;
+            mensagem += `📅 Data de Plantio: ${formData.step2.dataPlantio || 'N/A'}\n`;
+            mensagem += `🚜 Técnica de Plantio: ${formData.step2.tecnicaPlantio || 'N/A'}\n`;
+            mensagem += `📈 Produtividade Esperada: ${formData.step2.produtividade || 'N/A'} sc/ha\n`;
+            mensagem += `💰 Valor da Saca: R$ ${formData.step2.valorSaca || 'N/A'}\n`;
+            mensagem += `🛡️ PSR (Subvenção): ${formData.step2.psr || 'N/A'}\n\n`;
+
+            // Análise Química de Solo
+            if (formData.step3.ph || formData.step3.fosforo) {
+                mensagem += "🧪 *ANÁLISE QUÍMICA DE SOLO (0-20 cm)*\n";
+                mensagem += `• pH (CaCl₂): ${formData.step3.ph || '-'}\n`;
+                mensagem += `• P (Fósforo): ${formData.step3.fosforo || '-'} mg/dm³\n`;
+                mensagem += `• K (Potássio): ${formData.step3.potassio || '-'} mmolc/dm³\n`;
+                mensagem += `• Ca (Cálcio): ${formData.step3.calcio || '-'} mmolc/dm³\n`;
+                mensagem += `• Mg (Magnésio): ${formData.step3.magnesio || '-'} mmolc/dm³\n`;
+                mensagem += `• S (Enxofre): ${formData.step3.enxofre || '-'} mg/dm³\n`;
+                mensagem += `• Al (Alumínio): ${formData.step3.aluminio || '-'} mmolc/dm³\n`;
+                mensagem += `• CTC: ${formData.step3.ctc || '-'} mmolc/dm³\n`;
+                mensagem += `• Saturação por Bases (V%): ${formData.step3.saturacaoBases || '-'}%\n`;
+                mensagem += `• Saturação por Al (m%): ${formData.step3.saturacaoAluminio || '-'}%\n`;
+                mensagem += `• Relação Ca/Mg: ${formData.step3.relacaoCaMg || '-'}\n\n`;
+            }
+
+            // Micronutrientes e Matéria Orgânica
+            if (formData.step4.boro || formData.step4.mo) {
+                mensagem += "⚛️ *MICRONUTRIENTES E MATÉRIA ORGÂNICA*\n";
+                mensagem += `• B (Boro): ${formData.step4.boro || '-'} mg/dm³\n`;
+                mensagem += `• Cu (Cobre): ${formData.step4.cobre || '-'} mg/dm³\n`;
+                mensagem += `• Fe (Ferro): ${formData.step4.ferro || '-'} mg/dm³\n`;
+                mensagem += `• Mn (Manganês): ${formData.step4.manganes || '-'} mg/dm³\n`;
+                mensagem += `• Zn (Zinco): ${formData.step4.zinco || '-'} mg/dm³\n`;
+                mensagem += `• M.O. (Matéria Orgânica): ${formData.step4.mo || '-'} g/dm³\n`;
+                mensagem += `• C Orgânico: ${formData.step4.carbono || '-'} g/kg\n\n`;
+            }
+
+            // Classificação Textural
+            if (formData.step5.argila || formData.step5.classificacao) {
+                mensagem += "🏔️ *CLASSIFICAÇÃO TEXTURAL DO SOLO*\n";
+                mensagem += `• Argila: ${formData.step5.argila || '-'}%\n`;
+                mensagem += `• Silte: ${formData.step5.silte || '-'}%\n`;
+                mensagem += `• Areia: ${formData.step5.areia || '-'}%\n`;
+                mensagem += `• Classificação: ${formData.step5.classificacao || '-'}\n\n`;
+            }
+
+            // Estrutura Física
+            if (formData.step6.materiaOrganica || formData.step6.densidadeSolo) {
+                mensagem += "⛰️ *ESTRUTURA FÍSICA E CONSERVAÇÃO*\n";
+                mensagem += `• Matéria Orgânica (MO): ${formData.step6.materiaOrganica || '-'}%\n`;
+                mensagem += `• Densidade do Solo: ${formData.step6.densidadeSolo || '-'} g/cm³\n`;
+                mensagem += `• Grau de Compactação: ${formData.step6.compactacao || '-'}%\n\n`;
+            }
+
+            // Sobre o Manejo
+            if (formData.step7.preparoSolo || formData.step7.semeadura) {
+                mensagem += "🚜 *SOBRE O MANEJO*\n\n";
+
+                if (formData.step7.preparoSolo) {
+                    mensagem += `*1. Preparo e Conservação do Solo:*\n`;
+                    mensagem += `${getRespostaManejo('preparoSolo', formData.step7.preparoSolo)}\n\n`;
+                }
+
+                if (formData.step7.semeadura) {
+                    mensagem += `*2. Operação de Semeadura:*\n`;
+                    mensagem += `${getRespostaManejo('semeadura', formData.step7.semeadura)}\n\n`;
+                }
+
+                if (formData.step7.fertilidade) {
+                    mensagem += `*3. Gestão da Fertilidade:*\n`;
+                    mensagem += `${getRespostaManejo('fertilidade', formData.step7.fertilidade)}\n\n`;
+                }
+
+                if (formData.step7.mip) {
+                    mensagem += `*4. Manejo Integrado de Pragas (MIP):*\n`;
+                    mensagem += `${getRespostaManejo('mip', formData.step7.mip)}\n\n`;
+                }
+
+                if (formData.step7.diversificacao) {
+                    mensagem += `*5. Diversificação do Sistema Produtivo:*\n`;
+                    mensagem += `${getRespostaManejo('diversificacao', formData.step7.diversificacao)}\n\n`;
+                }
+            }
+
+            mensagem += "═══════════════════════════════\n";
+            mensagem += "📄 Relatório gerado automaticamente\n";
+            mensagem += "🌾 Sistema Score Lavouras\n";
+            mensagem += "⚠️ *CONTEÚDO CONFIDENCIAL:* Propriedade da Toyota Tsusho Corretora de Seguros. Proibido o compartilhamento com terceiros.";
+
+            const mensagemCodificada = encodeURIComponent(mensagem);
+            const telefone = "5511996264938";
+            const url = `https://wa.me/${telefone}?text=${mensagemCodificada}`;
+
+            window.open(url, '_blank');
+        }
+
+        // Função para enviar por e-mail
+        function enviarEmail() {
+            let assunto = "Relatório Score Lavouras - " + (formData.step1.fazenda || 'Fazenda');
+            let corpo = "RELATÓRIO SCORE LAVOURAS\n";
+            corpo += "═══════════════════════════════════════════\n\n";
+
+            corpo += "DADOS BÁSICOS DA PROPRIEDADE\n";
+            corpo += "─────────────────────────────────────────\n";
+            corpo += `Fazenda: ${formData.step1.fazenda || 'N/A'}\n`;
+            corpo += `CNPJ: ${formData.step1.cnpj || 'N/A'}\n`;
+            corpo += `Cidade/Estado: ${formData.step1.cidadeEstado || 'N/A'}\n`;
+            corpo += `Área Total: ${formData.step1.hectares || 'N/A'} hectares\n\n`;
+
+            corpo += "DADOS DE COTAÇÃO\n";
+            corpo += "─────────────────────────────────────────\n";
+            corpo += `Cultivar: ${formData.step2.cultivar || 'N/A'}\n`;
+            corpo += `Grupo de Maturação: ${formData.step2.grupoCultivar || 'N/A'}\n`;
+            corpo += `Data de Plantio: ${formData.step2.dataPlantio || 'N/A'}\n`;
+            corpo += `Técnica de Plantio: ${formData.step2.tecnicaPlantio || 'N/A'}\n`;
+            corpo += `Produtividade Esperada: ${formData.step2.produtividade || 'N/A'} sc/ha\n`;
+            corpo += `Valor da Saca: R$ ${formData.step2.valorSaca || 'N/A'}\n`;
+            corpo += `PSR (Subvenção): ${formData.step2.psr || 'N/A'}\n\n`;
+
+            // Análise Química de Solo
+            if (formData.step3.ph || formData.step3.fosforo) {
+                corpo += "ANÁLISE QUÍMICA DE SOLO (0-20 cm)\n";
+                corpo += "─────────────────────────────────────────\n";
+                corpo += `pH (CaCl₂): ${formData.step3.ph || '-'}\n`;
+                corpo += `P (Fósforo): ${formData.step3.fosforo || '-'} mg/dm³\n`;
+                corpo += `K (Potássio): ${formData.step3.potassio || '-'} mmolc/dm³\n`;
+                corpo += `Ca (Cálcio): ${formData.step3.calcio || '-'} mmolc/dm³\n`;
+                corpo += `Mg (Magnésio): ${formData.step3.magnesio || '-'} mmolc/dm³\n`;
+                corpo += `S (Enxofre): ${formData.step3.enxofre || '-'} mg/dm³\n`;
+                corpo += `Al (Alumínio): ${formData.step3.aluminio || '-'} mmolc/dm³\n`;
+                corpo += `CTC: ${formData.step3.ctc || '-'} mmolc/dm³\n`;
+                corpo += `Saturação por Bases (V%): ${formData.step3.saturacaoBases || '-'}%\n`;
+                corpo += `Saturação por Al (m%): ${formData.step3.saturacaoAluminio || '-'}%\n`;
+                corpo += `Relação Ca/Mg: ${formData.step3.relacaoCaMg || '-'}\n\n`;
+            }
+
+            // Micronutrientes e Matéria Orgânica
+            if (formData.step4.boro || formData.step4.mo) {
+                corpo += "MICRONUTRIENTES E MATÉRIA ORGÂNICA\n";
+                corpo += "─────────────────────────────────────────\n";
+                corpo += `B (Boro): ${formData.step4.boro || '-'} mg/dm³\n`;
+                corpo += `Cu (Cobre): ${formData.step4.cobre || '-'} mg/dm³\n`;
+                corpo += `Fe (Ferro): ${formData.step4.ferro || '-'} mg/dm³\n`;
+                corpo += `Mn (Manganês): ${formData.step4.manganes || '-'} mg/dm³\n`;
+                corpo += `Zn (Zinco): ${formData.step4.zinco || '-'} mg/dm³\n`;
+                corpo += `M.O. (Matéria Orgânica): ${formData.step4.mo || '-'} g/dm³\n`;
+                corpo += `C Orgânico: ${formData.step4.carbono || '-'} g/kg\n\n`;
+            }
+
+            // Classificação Textural
+            if (formData.step5.argila || formData.step5.classificacao) {
+                corpo += "CLASSIFICAÇÃO TEXTURAL DO SOLO\n";
+                corpo += "─────────────────────────────────────────\n";
+                corpo += `Argila: ${formData.step5.argila || '-'}%\n`;
+                corpo += `Silte: ${formData.step5.silte || '-'}%\n`;
+                corpo += `Areia: ${formData.step5.areia || '-'}%\n`;
+                corpo += `Classificação: ${formData.step5.classificacao || '-'}\n\n`;
+            }
+
+            // Estrutura Física
+            if (formData.step6.materiaOrganica || formData.step6.densidadeSolo) {
+                corpo += "ESTRUTURA FÍSICA E CONSERVAÇÃO\n";
+                corpo += "─────────────────────────────────────────\n";
+                corpo += `Matéria Orgânica (MO): ${formData.step6.materiaOrganica || '-'}%\n`;
+                corpo += `Densidade do Solo: ${formData.step6.densidadeSolo || '-'} g/cm³\n`;
+                corpo += `Grau de Compactação: ${formData.step6.compactacao || '-'}%\n\n`;
+            }
+
+            // Sobre o Manejo
+            if (formData.step7.preparoSolo || formData.step7.semeadura) {
+                corpo += "SOBRE O MANEJO\n";
+                corpo += "─────────────────────────────────────────\n\n";
+
+                if (formData.step7.preparoSolo) {
+                    corpo += `1. Preparo e Conservação do Solo:\n`;
+                    corpo += `${getRespostaManejo('preparoSolo', formData.step7.preparoSolo)}\n\n`;
+                }
+
+                if (formData.step7.semeadura) {
+                    corpo += `2. Operação de Semeadura:\n`;
+                    corpo += `${getRespostaManejo('semeadura', formData.step7.semeadura)}\n\n`;
+                }
+
+                if (formData.step7.fertilidade) {
+                    corpo += `3. Gestão da Fertilidade:\n`;
+                    corpo += `${getRespostaManejo('fertilidade', formData.step7.fertilidade)}\n\n`;
+                }
+
+                if (formData.step7.mip) {
+                    corpo += `4. Manejo Integrado de Pragas (MIP):\n`;
+                    corpo += `${getRespostaManejo('mip', formData.step7.mip)}\n\n`;
+                }
+
+                if (formData.step7.diversificacao) {
+                    corpo += `5. Diversificação do Sistema Produtivo:\n`;
+                    corpo += `${getRespostaManejo('diversificacao', formData.step7.diversificacao)}\n\n`;
+                }
+            }
+
+            corpo += "═══════════════════════════════════════════\n";
+            corpo += "OBS: Encaminhar os arquivos KML das propriedades por e-mail.\n\n";
+            corpo += "Este é um relatório gerado automaticamente pelo sistema Score Lavouras.";
+
+            const assuntoCodificado = encodeURIComponent(assunto);
+            const corpoCodificado = encodeURIComponent(corpo);
+            const email = "luiz_neto@toyotatusho.com.br";
+
+            const mailto = `mailto:${email}?subject=${assuntoCodificado}&body=${corpoCodificado}`;
+            window.location.href = mailto;
+        }
+
+        // Remover classe is-invalid quando o usuário começar a digitar
+        document.addEventListener('DOMContentLoaded', function () {
+            console.log('=== DOM Carregado ===');
+
+            // Adicionar listener para o select de fazendas
+            // Listener movido para escopo global
+
+            // Preencher dados iniciais se houver seleção
+            preencherDadosFazenda();
+
+            // Adicionar listener para remover validação de erro
+            const inputs = document.querySelectorAll('input, select');
+            inputs.forEach(input => {
+                input.addEventListener('input', function () {
+                    this.classList.remove('is-invalid');
+                });
+                input.addEventListener('change', function () {
+                    this.classList.remove('is-invalid');
+                });
+            });
+        });
+    </script>
+</body>
+
+</html>
